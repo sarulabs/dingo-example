@@ -7,6 +7,16 @@ It shows how to use [sarulabs/dingo](https://github.com/sarulabs/dingo) in a web
 More explanations can be found in this article:
 - [How to Write a REST API in Go With Dingo](https://www.sarulabs.com/post/3/2018-07-05/how-to-write-a-rest-api-in-go-with-dingo.html)
 
+## Routes
+
+| Method  | URL         | Role        | JSON Body example                    |
+| ------- | ----------- | ----------- | ------------------------------------ |
+| GET     | /cars       | List cars   |                                      |
+| POST    | /cars       | Insert car  | {"brand": "audi", "color": "black"}  |
+| GET     | /cars/{id}  | Get car     |                                      |
+| PUT     | /cars/{id}  | Update car  | {"brand": "audi", "color": "black"}  |
+| DELETE  | /cars/{id}  | Delete car  |                                      |
+
 ## Service generation
 
 The generated services are already committed in this repository. They have been generated with:
