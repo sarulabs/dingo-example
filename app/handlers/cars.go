@@ -11,7 +11,7 @@ import (
 
 // GetCarListHandler is the handler that prints the list of cars.
 func GetCarListHandler(w http.ResponseWriter, r *http.Request) {
-	cars, err := dic.CarRepository(r).FindAll()
+	cars, err := dic.CarManager(r).GetAll()
 
 	if err == nil {
 		helpers.JSONResponse(w, 200, cars)
@@ -25,24 +25,26 @@ func GetCarListHandler(w http.ResponseWriter, r *http.Request) {
 
 // PostCarHandler is the handler that adds a new car.
 func PostCarHandler(w http.ResponseWriter, r *http.Request) {
-	var input *Car
+	var input *garage.Car
 
-	helpers.ReadJSONBody(r, &input)
+	err := helpers.ReadJSONBody(r, &input)
+	if err != nil {
+		helpers.JSONResponse(w, 400, map[string]interface{}{
+			"error": "Could not decode request body.",
+		})
+		return
+	}
 
 	car, err := dic.CarManager(r).Create(input)
 
 	if err == nil {
-		helpers.JSONResponse(w, 200, cars)
+		helpers.JSONResponse(w, 200, car)
 		return
 	}
 
 	switch e := err.(type) {
-	case garage.ErrValidation:
+	case helpers.ErrValidation:
 		helpers.JSONResponse(w, 400, map[string]interface{}{
-			"error": e.PublicMessage,
-		})
-	case garage.ErrNotFound:
-		helpers.JSONResponse(w, 404, map[string]interface{}{
 			"error": e.PublicMessage,
 		})
 	default:
@@ -59,12 +61,12 @@ func GetCarHandler(w http.ResponseWriter, r *http.Request) {
 	car, err := dic.CarManager(r).Get(id)
 
 	if err == nil {
-		helpers.JSONResponse(w, 200, cars)
+		helpers.JSONResponse(w, 200, car)
 		return
 	}
 
 	switch e := err.(type) {
-	case garage.ErrNotFound:
+	case helpers.ErrNotFound:
 		helpers.JSONResponse(w, 404, map[string]interface{}{
 			"error": e.PublicMessage,
 		})
@@ -77,25 +79,31 @@ func GetCarHandler(w http.ResponseWriter, r *http.Request) {
 
 // PutCarHandler is the handler that updates a car.
 func PutCarHandler(w http.ResponseWriter, r *http.Request) {
-	var input *Car
+	var input *garage.Car
 
-	helpers.ReadJSONBody(r, &input)
+	err := helpers.ReadJSONBody(r, &input)
+	if err != nil {
+		helpers.JSONResponse(w, 400, map[string]interface{}{
+			"error": "Could not decode request body.",
+		})
+		return
+	}
 
 	id := mux.Vars(r)["carId"]
 
 	car, err := dic.CarManager(r).Update(id, input)
 
 	if err == nil {
-		helpers.JSONResponse(w, 200, cars)
+		helpers.JSONResponse(w, 200, car)
 		return
 	}
 
 	switch e := err.(type) {
-	case garage.ErrValidation:
+	case helpers.ErrValidation:
 		helpers.JSONResponse(w, 400, map[string]interface{}{
 			"error": e.PublicMessage,
 		})
-	case garage.ErrNotFound:
+	case helpers.ErrNotFound:
 		helpers.JSONResponse(w, 404, map[string]interface{}{
 			"error": e.PublicMessage,
 		})
@@ -110,22 +118,14 @@ func PutCarHandler(w http.ResponseWriter, r *http.Request) {
 func DeleteCarHandler(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["carId"]
 
-	car, err := dic.CarManager(r).Delete(id)
+	err := dic.CarManager(r).Delete(id)
 
 	if err == nil {
-		// TODO: just modify the response code
-		helpers.JSONResponse(w, 204, "")
+		w.WriteHeader(204)
 		return
 	}
 
-	switch e := err.(type) {
-	case garage.ErrNotFound:
-		helpers.JSONResponse(w, 404, map[string]interface{}{
-			"error": e.PublicMessage,
-		})
-	default:
-		helpers.JSONResponse(w, 500, map[string]interface{}{
-			"error": "Internal Error",
-		})
-	}
+	helpers.JSONResponse(w, 500, map[string]interface{}{
+		"error": "Internal Error",
+	})
 }

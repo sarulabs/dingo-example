@@ -20,6 +20,19 @@ func getDefinitions(provider *dingodependencies.Provider) []dingodi.Definition {
 
 
 	
+				pi1, err := ctn.SafeGet("logger")
+				if err != nil {
+					return nil, err
+				}
+	
+				p1, ok := pi1.(*zap.Logger)
+				if !ok {
+					return nil, dingoerrors.New("could not cast parameter Logger of car-manager to *zap.Logger")
+				}
+
+
+
+	
 				pi0, err := ctn.SafeGet("car-repository")
 				if err != nil {
 					return nil, err
@@ -33,6 +46,8 @@ func getDefinitions(provider *dingodependencies.Provider) []dingodi.Definition {
 
 				return &garage.CarManager{
 					Repo: p0,
+
+					Logger: p1,
 				}, nil
 			},
 			Close: func(obj interface{}) {},
@@ -77,24 +92,7 @@ func getDefinitions(provider *dingodependencies.Provider) []dingodi.Definition {
 
 				return b()
 			},
-			Close: func(obj interface{}) {
-				d, err := provider.Get("logger")
-				if err != nil {
-					return
-				}
-
-				c, ok := d.Close.(func(*zap.Logger))
-				if !ok {
-					return
-				}
-
-				o, ok := obj.(*zap.Logger)
-				if !ok {
-					return
-				}
-
-				c(o)
-			},
+			Close: func(obj interface{}) {},
 		},
 		{
 			Name: "mongo",

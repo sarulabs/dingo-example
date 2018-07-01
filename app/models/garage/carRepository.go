@@ -8,6 +8,7 @@ type CarRepository struct {
 	Session *mgo.Session
 }
 
+// collection returns the car collection.
 func (repo *CarRepository) collection() *mgo.Collection {
 	return repo.Session.DB("dingo_car_api").C("cars")
 }
@@ -19,7 +20,7 @@ func (repo *CarRepository) FindAll() ([]*Car, error) {
 	return cars, err
 }
 
-// FindByID returns the car with the given id from the database.
+// FindByID retrieves the car with the given id from the database.
 func (repo *CarRepository) FindByID(id string) (*Car, error) {
 	var car *Car
 	err := repo.collection().FindId(id).One(&car)
@@ -34,4 +35,20 @@ func (repo *CarRepository) Insert(car *Car) error {
 // Update updates all the caracteristics of a car.
 func (repo *CarRepository) Update(car *Car) error {
 	return repo.collection().UpdateId(car.ID, car)
+}
+
+// Delete removes the car with the given id.
+func (repo *CarRepository) Delete(id string) error {
+	return repo.collection().RemoveId(id)
+}
+
+// IsNotFoundErr returns true if the error concerns a not found document.
+func (repo *CarRepository) IsNotFoundErr(err error) bool {
+	return err == mgo.ErrNotFound
+}
+
+// IsAlreadyExistErr returns true if the error is related
+// to the insertion of an already existing document.
+func (repo *CarRepository) IsAlreadyExistErr(err error) bool {
+	return mgo.IsDup(err)
 }

@@ -2,9 +2,11 @@ package dingorawdefs
 
 import (
 	"os"
+	"time"
 
 	"github.com/sarulabs/dingo"
 	"github.com/sarulabs/dingo-example/app/models/garage"
+	"github.com/sarulabs/dingo-example/config/logging"
 	"go.uber.org/zap"
 	mgo "gopkg.in/mgo.v2"
 )
@@ -15,17 +17,14 @@ var Services = []dingo.Def{
 		Name:  "logger",
 		Scope: dingo.App,
 		Build: func() (*zap.Logger, error) {
-			return zap.NewDevelopment()
-		},
-		Close: func(logger *zap.Logger) {
-			logger.Sync()
+			return logging.Logger, nil
 		},
 	},
 	{
 		Name:  "mongo-pool",
 		Scope: dingo.App,
 		Build: func() (*mgo.Session, error) {
-			return mgo.Dial(os.Getenv("MONGO_URL"))
+			return mgo.DialWithTimeout(os.Getenv("MONGO_URL"), 5*time.Second)
 		},
 		Close: func(s *mgo.Session) {
 			s.Close()

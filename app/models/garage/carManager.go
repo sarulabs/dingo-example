@@ -1,31 +1,113 @@
 package garage
 
-type ErrValidation struct {
-	error
-	PublicMessage string
-}
+import (
+	"github.com/sarulabs/dingo-example/app/models/helpers"
+	"go.uber.org/zap"
+	"gopkg.in/mgo.v2/bson"
+)
 
-type ErrNotFound struct {
-	error
-	PublicMessage string
-}
-
+// CarManager handles the creation, modification and deletion of cars.
+// It uses a CarRepository to communicate with the database.
 type CarManager struct {
-	Repo *CarRepository
+	Repo   *CarRepository
+	Logger *zap.Logger
 }
 
+// GetAll returns the list of cars.
+func (m *CarManager) GetAll() ([]*Car, error) {
+	cars, err := m.Repo.FindAll()
+
+	if cars == nil {
+		cars = []*Car{}
+	}
+
+	if err != nil {
+		m.Logger.Error(err.Error())
+	}
+
+	return cars, err
+}
+
+// Get returns the car with the given id.
+// If the car does not exist an helpers.ErrNotFound is returned.
 func (m *CarManager) Get(id string) (*Car, error) {
-	return nil, nil
+	car, err := m.Repo.FindByID(id)
+
+	if m.Repo.IsNotFoundErr(err) {
+		return nil, helpers.ErrNotFound{
+			Err:           err,
+			PublicMessage: "Car `" + id + "` does not exist.",
+		}
+	}
+
+	if err != nil {
+		m.Logger.Error(err.Error())
+	}
+
+	return car, err
 }
 
-func (m *CarManager) Create(input *Car) (*Car, error) {
-	return nil, nil
+// Create inserts the given car in the database.
+// It returns the inserted car.
+func (m *CarManager) Create(car *Car) (*Car, error) {
+	if err := ValidateCar(car); err != nil {
+		return nil, err
+	}
+
+	car.ID = bson.NewObjectId().Hex()
+
+	err := m.Repo.Insert(car)
+
+	if m.Repo.IsAlreadyExistErr(err) {
+		return m.Create(car)
+	}
+
+	if err != nil {
+		m.Logger.Error(err.Error())
+		return nil, err
+	}
+
+	return car, nil
 }
 
-func (m *CarManager) Update(input *Car) (*Car, error) {
-	return nil, nil
+// Update updates the car with the given id.
+// It uses the values contained in the given car fields.
+// It returns the updated car.
+func (m *CarManager) Update(id string, car *Car) (*Car, error) {
+	if err := ValidateCar(car); err != nil {
+		return nil, err
+	}
+
+	car.ID = id
+
+	err := m.Repo.Update(car)
+
+	if m.Repo.IsNotFoundErr(err) {
+		return nil, helpers.ErrNotFound{
+			Err:           err,
+			PublicMessage: "Car `" + id + "` does not exist.",
+		}
+	}
+
+	if err != nil {
+		m.Logger.Error(err.Error())
+		return nil, err
+	}
+
+	return car, err
 }
 
-func (m *CarManager) Delele(id string) error {
-	return nil
+// Delete removes the car with the given id.
+func (m *CarManager) Delete(id string) error {
+	err := m.Repo.Delete(id)
+
+	if m.Repo.IsNotFoundErr(err) {
+		return nil
+	}
+
+	if err != nil {
+		m.Logger.Error(err.Error())
+	}
+
+	return err
 }
