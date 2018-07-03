@@ -39,11 +39,7 @@ func ValidateCar(car *Car) error {
 	if !ok {
 		msg := "Brand `" + car.Brand + "` does not exist. Available brands: " +
 			strings.Join(brands(), ", ")
-
-		return helpers.ErrValidation{
-			Err:           errors.New(msg),
-			PublicMessage: msg,
-		}
+		return helpers.ErrValidation(errors.New(msg))
 	}
 
 	for _, color := range colors {
@@ -55,8 +51,5 @@ func ValidateCar(car *Car) error {
 	msg := "Color `" + car.Color + "` does not exist for `" + car.Brand +
 		"`. Available colors: " + strings.Join(colors, ", ")
 
-	return helpers.ErrValidation{
-		Err:           errors.New(msg),
-		PublicMessage: msg,
-	}
+	return helpers.ErrValidation(errors.New(msg))
 }

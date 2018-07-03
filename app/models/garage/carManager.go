@@ -1,6 +1,8 @@
 package garage
 
 import (
+	"errors"
+
 	"github.com/sarulabs/dingo-example/app/models/helpers"
 	"go.uber.org/zap"
 	"gopkg.in/mgo.v2/bson"
@@ -34,10 +36,7 @@ func (m *CarManager) Get(id string) (*Car, error) {
 	car, err := m.Repo.FindByID(id)
 
 	if m.Repo.IsNotFoundErr(err) {
-		return nil, helpers.ErrNotFound{
-			Err:           err,
-			PublicMessage: "Car `" + id + "` does not exist.",
-		}
+		return nil, helpers.ErrNotFound(errors.New("Car `" + id + "` does not exist."))
 	}
 
 	if err != nil {
@@ -83,10 +82,7 @@ func (m *CarManager) Update(id string, car *Car) (*Car, error) {
 	err := m.Repo.Update(car)
 
 	if m.Repo.IsNotFoundErr(err) {
-		return nil, helpers.ErrNotFound{
-			Err:           err,
-			PublicMessage: "Car `" + id + "` does not exist.",
-		}
+		return nil, helpers.ErrNotFound(errors.New("Car `" + id + "` does not exist."))
 	}
 
 	if err != nil {

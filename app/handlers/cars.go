@@ -45,7 +45,7 @@ func PostCarHandler(w http.ResponseWriter, r *http.Request) {
 	switch e := err.(type) {
 	case helpers.ErrValidation:
 		helpers.JSONResponse(w, 400, map[string]interface{}{
-			"error": e.PublicMessage,
+			"error": e.Error(),
 		})
 	default:
 		helpers.JSONResponse(w, 500, map[string]interface{}{
@@ -68,7 +68,7 @@ func GetCarHandler(w http.ResponseWriter, r *http.Request) {
 	switch e := err.(type) {
 	case helpers.ErrNotFound:
 		helpers.JSONResponse(w, 404, map[string]interface{}{
-			"error": e.PublicMessage,
+			"error": e.Error(),
 		})
 	default:
 		helpers.JSONResponse(w, 500, map[string]interface{}{
@@ -101,11 +101,11 @@ func PutCarHandler(w http.ResponseWriter, r *http.Request) {
 	switch e := err.(type) {
 	case helpers.ErrValidation:
 		helpers.JSONResponse(w, 400, map[string]interface{}{
-			"error": e.PublicMessage,
+			"error": e.Error(),
 		})
 	case helpers.ErrNotFound:
 		helpers.JSONResponse(w, 404, map[string]interface{}{
-			"error": e.PublicMessage,
+			"error": e.Error(),
 		})
 	default:
 		helpers.JSONResponse(w, 500, map[string]interface{}{
